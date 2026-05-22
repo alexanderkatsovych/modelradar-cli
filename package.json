@@ -1,0 +1,20 @@
+{
+  "name": "modelradar",
+  "version": "0.1.0",
+  "description": "Scan your codebase for deprecated and retiring LLM model IDs.",
+  "type": "module",
+  "bin": {
+    "modelradar": "bin/modelradar.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "homepage": "https://modelradar.embervalue.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alexanderkatsovych/modelradar-cli.git"
+  },
+  "keywords": ["llm", "openai", "anthropic", "gpt", "claude", "deprecation", "ci"],
+  "files": ["bin"]
+}
