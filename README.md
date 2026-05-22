@@ -1,16 +1,19 @@
-# ModelRadar CLI &amp; GitHub Action
+# ModelRadar — LLM deprecation check for CI
 
-**Scan your codebase for deprecated and retiring LLM model IDs — and fail CI
-before a model you depend on disappears.**
+**Scan your codebase for deprecated and retiring LLM model IDs — and fail the
+build before a model you depend on disappears.**
 
-Part of [ModelRadar](https://modelradar.embervalue.com). Model lifecycle data
-comes from the open
+Providers retire models on their own schedule. If your code hardcodes a model
+ID, you usually find out when production breaks. This catches it in CI instead.
+
+Part of [ModelRadar](https://modelradar.embervalue.com). Lifecycle data comes
+from the open
 [modelradar-data](https://github.com/alexanderkatsovych/modelradar-data)
-dataset.
+dataset (CC BY 4.0).
 
 ## GitHub Action
 
-Add this workflow — it fails the build if your code uses a model scheduled to
+Add this workflow — it fails the build when your code uses a model scheduled to
 retire within 90 days:
 
 ```yaml
@@ -37,24 +40,33 @@ With options:
 ## CLI
 
 ```bash
-npx github:alexanderkatsovych/modelradar-cli scan
+npx github:alexanderkatsovych/modelradar-cli scan [path]
 ```
 
-Once published to npm:
+Options: `--max-days=90` · `--strict` · `--json`
 
-```bash
-npx modelradar scan [path] [--max-days=90] [--strict] [--json]
+### Example
+
+```
+ModelRadar — scanned 214 file(s) in ./src
+
+  RETIRED     gpt-4-32k   already retired → openai/gpt-4o
+    src/llm/client.ts
+  RETIRING    claude-3-opus-20240229   retires 2026-07-30 — 41 days left
+    src/agents/research.ts
+  ok          gpt-4o   active
+
+✖ 2 model(s) need attention.
 ```
 
-It walks your source files, finds LLM model IDs (`gpt-4o`, `claude-*`,
-`gemini-*`, `grok-*`, and more), checks each against the ModelRadar dataset,
-and reports which are **retired**, **retiring soon**, or **deprecated**.
-Exit code `1` means action is needed — ideal for CI.
+Exit code `1` means action is needed — wire it straight into CI.
 
 ## How it works
 
-Zero dependencies. It fetches the open model dataset over HTTPS and scans your
-tree locally — **your code is never uploaded anywhere**.
+Zero dependencies. It fetches the open model dataset over HTTPS, then walks your
+source files locally and matches model IDs only where they appear as real
+string values — so prose and URLs don't trigger false alarms. **Your code is
+never uploaded anywhere.**
 
 ## License
 

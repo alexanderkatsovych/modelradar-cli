@@ -96,11 +96,20 @@ async function main() {
   // --- fetch the open dataset ---
   let models;
   try {
-    const res = await fetch(DATA_URL, { signal: AbortSignal.timeout(15_000) });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    if (!Array.isArray(data.models)) throw new Error('dataset format unexpected');
-    models = data.models;
+    // Retry the dataset fetch — a transient network blip must not fail CI.
+    for (let attempt = 1; ; attempt += 1) {
+      try {
+        const res = await fetch(DATA_URL, { signal: AbortSignal.timeout(15_000) });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (!Array.isArray(data.models)) throw new Error('dataset format unexpected');
+        models = data.models;
+        break;
+      } catch (err) {
+        if (attempt >= 3) throw err;
+        await new Promise((r) => setTimeout(r, 500 * attempt));
+      }
+    }
   } catch (err) {
     console.error(`modelradar: could not fetch model data — ${err.message}`);
     return 2;
