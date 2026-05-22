@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check
+        run: node --check bin/modelradar.js
+      - name: Help runs and exits clean
+        run: node bin/modelradar.js --help
+      - name: Invalid --max-days is rejected
+        run: "! node bin/modelradar.js scan . --max-days=oops"
