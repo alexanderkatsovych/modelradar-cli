@@ -1,6 +1,6 @@
 {
   "name": "modelradar",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Scan your codebase for deprecated and retiring LLM model IDs.",
   "type": "module",
   "bin": {
