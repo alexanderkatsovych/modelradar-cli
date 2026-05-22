@@ -76,7 +76,14 @@ async function main() {
     return hit ? hit.slice(name.length + 3) : def;
   };
   const scanPath = args.slice(1).find((a) => !a.startsWith('-')) || '.';
-  const maxDays = Number(getOpt('max-days', '90')) || 90;
+  const rawMaxDays = getOpt('max-days', '90');
+  const maxDays = Number(rawMaxDays);
+  if (!Number.isInteger(maxDays) || maxDays < 0) {
+    console.error(
+      `modelradar: --max-days must be a non-negative integer (got "${rawMaxDays}").`,
+    );
+    return 1;
+  }
   const strict = args.includes('--strict');
   const asJson = args.includes('--json');
   const useColor = !process.env.NO_COLOR && !asJson;
@@ -100,11 +107,19 @@ async function main() {
   for (const m of models) if (m.api_id) byApiId.set(m.api_id, m);
 
   // --- scan the tree ---
+  // A model id only counts as "used" when it touches a code delimiter — a
+  // quote, backtick, equals or colon — on at least one side. This excludes
+  // prose (the word "command" in a sentence) and URL paths (".../gpt-4"),
+  // the dominant false positives for short or dictionary-word model ids.
   const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const idMatchers = [...byApiId.keys()].map((id) => ({
-    id,
-    re: new RegExp(`(^|[^\\w.-])${escapeRe(id)}([^\\w.-]|$)`),
-  }));
+  const DELIM = '[\'"`=:]';
+  const idMatchers = [...byApiId.keys()].map((id) => {
+    const e = escapeRe(id);
+    return {
+      id,
+      re: new RegExp(`${DELIM}${e}(?![\\w.-])|(?<![\\w.-])${e}${DELIM}`),
+    };
+  });
   const found = new Map(); // api_id -> Set<file>
   let filesScanned = 0;
 
