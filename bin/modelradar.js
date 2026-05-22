@@ -96,9 +96,11 @@ async function main() {
   // --- fetch the open dataset ---
   let models;
   try {
-    const res = await fetch(DATA_URL);
+    const res = await fetch(DATA_URL, { signal: AbortSignal.timeout(15_000) });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    models = (await res.json()).models;
+    const data = await res.json();
+    if (!Array.isArray(data.models)) throw new Error('dataset format unexpected');
+    models = data.models;
   } catch (err) {
     console.error(`modelradar: could not fetch model data — ${err.message}`);
     return 2;
